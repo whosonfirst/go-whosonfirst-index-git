@@ -24,11 +24,11 @@ func init() {
 
 type GitDriver struct {
 	index.Driver
-	repo_driver index.Driver
+	repo_driver *driver.RepoDriver
 }
 
 func (d *GitDriver) Open(uri string) error {
-	return d.repo_driver.Open(uri)
+	return d.repo_driver.Open("repo://")
 }
 
 func (d *GitDriver) IndexURI(ctx context.Context, index_cb index.IndexerFunc, uri string) error {
