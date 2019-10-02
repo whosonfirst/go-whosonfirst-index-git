@@ -2,8 +2,8 @@ package git
 
 import (
 	"context"
-	"github.com/whosonfirst/go-whosonfirst-index"	
-	"github.com/whosonfirst/go-whosonfirst-index/driver"
+	"github.com/whosonfirst/go-whosonfirst-index"
+	"github.com/whosonfirst/go-whosonfirst-index/fs"
 	gogit "gopkg.in/src-d/go-git.v4"
 	_ "gopkg.in/src-d/go-git.v4/plumbing/protocol/packp/sideband"
 	"io/ioutil"
@@ -12,23 +12,28 @@ import (
 )
 
 func init() {
+	dr := NewGitDriver()
+	index.Register("git", dr)
+}
 
-	rd := &driver.RepoDriver{}
+func NewGitDriver() index.Driver {
+
+	rd := fs.NewRepoDriver()
 
 	dr := &GitDriver{
 		repo_driver: rd,
 	}
 
-	index.Register("git", dr)
+	return dr
 }
 
 type GitDriver struct {
 	index.Driver
-	repo_driver *driver.RepoDriver
+	repo_driver index.Driver
 }
 
 func (d *GitDriver) Open(uri string) error {
-	return d.repo_driver.Open("repo://")
+	return d.repo_driver.Open(uri)
 }
 
 func (d *GitDriver) IndexURI(ctx context.Context, index_cb index.IndexerFunc, uri string) error {

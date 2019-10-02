@@ -1,4 +1,4 @@
-package driver
+package fs
 
 import (
 	"bufio"
@@ -7,10 +7,12 @@ import (
 )
 
 func init() {
-
-	dr := &FileListDriver{}
-
+	dr := NewFileListDriver()
 	index.Register("filelist", dr)
+}
+
+func NewFileListDriver() index.Driver {
+	return &FileListDriver{}
 }
 
 type FileListDriver struct {

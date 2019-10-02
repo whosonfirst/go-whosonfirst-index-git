@@ -1,4 +1,4 @@
-package driver
+package fs
 
 import (
 	"github.com/whosonfirst/go-whosonfirst-index"

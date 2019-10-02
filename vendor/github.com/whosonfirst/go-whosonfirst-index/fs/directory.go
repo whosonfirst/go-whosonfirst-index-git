@@ -1,4 +1,4 @@
-package driver
+package fs
 
 import (
 	"context"
@@ -9,8 +9,12 @@ import (
 )
 
 func init() {
-	dr := &DirectoryDriver{}
+	dr := NewDirectoryDriver()
 	index.Register("directory", dr)
+}
+
+func NewDirectoryDriver() index.Driver {
+	return &DirectoryDriver{}
 }
 
 type DirectoryDriver struct {

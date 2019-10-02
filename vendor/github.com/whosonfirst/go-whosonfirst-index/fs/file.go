@@ -1,4 +1,4 @@
-package driver
+package fs
 
 import (
 	"context"
@@ -6,10 +6,12 @@ import (
 )
 
 func init() {
-
-	dr := &FileDriver{}
-
+	dr := NewFileDriver()
 	index.Register("file", dr)
+}
+
+func NewFileDriver() index.Driver {
+	return &FileDriver{}
 }
 
 type FileDriver struct {
