@@ -18,7 +18,7 @@ func init() {
 
 type GitDriver struct {
 	index.Driver
-	target string
+	target   string
 	preserve bool
 }
 
@@ -42,23 +42,23 @@ func (d *GitDriver) Open(uri string) error {
 	if q.Get("preserve") == "1" {
 		d.preserve = true
 	}
-	
+
 	return nil
 }
 
 func (d *GitDriver) IndexURI(ctx context.Context, index_cb index.IndexerFunc, uri string) error {
 
 	var repo *gogit.Repository
-	
+
 	opts := &gogit.CloneOptions{
 		URL: uri,
 	}
 
 	switch d.target {
 	case "":
-	
+
 		r, err := gogit.Clone(memory.NewStorage(), nil, opts)
-		
+
 		if err != nil {
 			return err
 		}
@@ -68,7 +68,7 @@ func (d *GitDriver) IndexURI(ctx context.Context, index_cb index.IndexerFunc, ur
 
 		fname := filepath.Base(uri)
 		path := filepath.Join(d.target, fname)
-		
+
 		r, err := gogit.PlainClone(path, false, opts)
 
 		if err != nil {
@@ -78,10 +78,10 @@ func (d *GitDriver) IndexURI(ctx context.Context, index_cb index.IndexerFunc, ur
 		if !d.preserve {
 			defer os.RemoveAll(path)
 		}
-		
+
 		repo = r
 	}
-	
+
 	ref, err := repo.Head()
 
 	if err != nil {
@@ -101,6 +101,13 @@ func (d *GitDriver) IndexURI(ctx context.Context, index_cb index.IndexerFunc, ur
 	}
 
 	tree.Files().ForEach(func(f *object.File) error {
+
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			// pass
+		}
 
 		switch filepath.Ext(f.Name) {
 		case ".geojson":
