@@ -2,7 +2,8 @@ package git
 
 import (
 	"context"
-	"github.com/whosonfirst/go-whosonfirst-index"
+	"github.com/whosonfirst/go-whosonfirst-index/v2/emitter"
+	"github.com/whosonfirst/go-whosonfirst-index/v2/filters"	
 	gogit "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
@@ -12,22 +13,19 @@ import (
 )
 
 func init() {
-	dr := NewGitDriver()
-	index.Register("git", dr)
+	ctx := context.Background()
+	emitter.RegisterEmitter(ctx, "git", dr)
 }
 
-type GitDriver struct {
-	index.Driver
+type GitEmitter struct {
+	emitter.Emitter
 	target string
 	preserve bool
+	filters filters.Filters
 }
 
-func NewGitDriver() index.Driver {
-	dr := &GitDriver{}
-	return dr
-}
 
-func (d *GitDriver) Open(uri string) error {
+func NewGitEmitter(ctx context.Context, uri string) (emitter.Emitter, error) {
 
 	u, err := url.Parse(uri)
 
@@ -35,18 +33,28 @@ func (d *GitDriver) Open(uri string) error {
 		return err
 	}
 
-	d.target = u.Path
+	em := GitEmitter{
+		target: u.Path,
+	}
 
 	q := u.Query()
 
+	f, err := filters.NewQueryFiltersFromQuery(ctx, q)
+
+	if err != nil {
+		return nil, err
+	}
+
+	em.filters = f
+	
 	if q.Get("preserve") == "1" {
-		d.preserve = true
+		em.preserve = true
 	}
 	
-	return nil
+	return em, nil
 }
 
-func (d *GitDriver) IndexURI(ctx context.Context, index_cb index.IndexerFunc, uri string) error {
+func (em *GitEmitter) IndexURI(ctx context.Context, index_cb emitter.EmitterCallbackFunc, uri string) error {
 
 	var repo *gogit.Repository
 	
@@ -116,8 +124,27 @@ func (d *GitDriver) IndexURI(ctx context.Context, index_cb index.IndexerFunc, ur
 		}
 
 		defer fh.Close()
+		
+		if em.filters != nil {
 
-		ctx := index.AssignPathContext(ctx, f.Name)
+			ok, err := em.filters.Apply(ctx, fh)
+
+			if err != nil {
+				return err
+			}
+
+			if !ok {
+				return nil
+			}
+
+			_, err = fh.Seek(0, 0)
+
+			if err != nil {
+				return err
+			}
+		}
+		
+		ctx := emitter.AssignPathContext(ctx, f.Name)
 		return index_cb(ctx, fh)
 	})
 
