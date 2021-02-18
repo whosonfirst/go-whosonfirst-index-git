@@ -13,7 +13,7 @@ import (
 
 func main() {
 
-	var dsn = flag.String("dsn", "git://", "")
+	var emitter_uri = flag.String("emitter-uri", "git://", "")
 	flag.Parse()
 
 	var count int64
@@ -33,7 +33,7 @@ func main() {
 
 	ctx := context.Background()
 	
-	i, err := index.NewIndexer(ctx, *dsn, cb)
+	idx, err := indexer.NewIndexer(ctx, *emitter_uri, cb)
 
 	if err != nil {
 		log.Fatal(err)
@@ -41,11 +41,11 @@ func main() {
 
 	paths := flag.Args()
 
-	err = i.Index(ctx, paths...)
+	err = idx.Index(ctx, paths...)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println(count, i.Indexed)
+	log.Printf("Counted %d records (indexed %d records)\n", count, idx.Indexed)
 }

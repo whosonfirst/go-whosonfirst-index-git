@@ -3,7 +3,8 @@ package git
 import (
 	"context"
 	"github.com/whosonfirst/go-whosonfirst-index/v2/emitter"
-	"github.com/whosonfirst/go-whosonfirst-index/v2/filters"	
+	"github.com/whosonfirst/go-whosonfirst-index/v2/filters"
+	"github.com/whosonfirst/go-whosonfirst-index/v2/ioutil"		
 	gogit "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
@@ -14,7 +15,7 @@ import (
 
 func init() {
 	ctx := context.Background()
-	emitter.RegisterEmitter(ctx, "git", dr)
+	emitter.RegisterEmitter(ctx, "git", NewGitEmitter)
 }
 
 type GitEmitter struct {
@@ -30,10 +31,10 @@ func NewGitEmitter(ctx context.Context, uri string) (emitter.Emitter, error) {
 	u, err := url.Parse(uri)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	em := GitEmitter{
+	
+	em := &GitEmitter{
 		target: u.Path,
 	}
 
@@ -62,7 +63,7 @@ func (em *GitEmitter) IndexURI(ctx context.Context, index_cb emitter.EmitterCall
 		URL: uri,
 	}
 
-	switch d.target {
+	switch em.target {
 	case "":
 	
 		r, err := gogit.Clone(memory.NewStorage(), nil, opts)
@@ -75,7 +76,7 @@ func (em *GitEmitter) IndexURI(ctx context.Context, index_cb emitter.EmitterCall
 	default:
 
 		fname := filepath.Base(uri)
-		path := filepath.Join(d.target, fname)
+		path := filepath.Join(em.target, fname)
 		
 		r, err := gogit.PlainClone(path, false, opts)
 
@@ -83,7 +84,7 @@ func (em *GitEmitter) IndexURI(ctx context.Context, index_cb emitter.EmitterCall
 			return err
 		}
 
-		if !d.preserve {
+		if !em.preserve {
 			defer os.RemoveAll(path)
 		}
 		
@@ -117,13 +118,19 @@ func (em *GitEmitter) IndexURI(ctx context.Context, index_cb emitter.EmitterCall
 			return nil
 		}
 
-		fh, err := f.Reader()
+		r, err := f.Reader()
 
 		if err != nil {
 			return err
 		}
 
-		defer fh.Close()
+		defer r.Close()
+
+		fh, err := ioutil.NewReadSeekCloser(r)
+
+		if err != nil {
+			return err
+		}
 		
 		if em.filters != nil {
 
