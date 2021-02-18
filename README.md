@@ -2,6 +2,18 @@
 
 Git support for the go-whosonfirst-index (v2) package.
 
+## Important
+
+This is a "version 2" release and is backwards incompatible with previous versions of this package. If you need to use the older version specify it as follows in your `go.mod` file:
+
+```
+require (
+	github.com/aaronland/go-whosonfirst-index-git v0.0.5
+)
+```
+
+Documentation for this package is incomplete and will be updated shortly.
+
 ## Example
 
 ```
@@ -50,7 +62,7 @@ go build -mod vendor -o bin/emit cmd/emit/main.go
 Count files in one or more whosonfirst/go-whosonfirst-index/v2/emitter sources.
 
 ```
-> ./bin/count -h
+$> ./bin/count -h
 Count files in one or more whosonfirst/go-whosonfirst-index/v2/emitter sources.
 Usage:
 	 ./bin/count [options] uri(N) uri(N)
@@ -70,7 +82,7 @@ $> ./bin/count \
 
 
 ```
-> ./bin/count \
+$> ./bin/count \
 	-emitter-uri 'git://?include=properties.mz:is_current=1&include=properties.sfomuseum:placetype=gate' \
 	https://github.com/sfomuseum-data/sfomuseum-data-architecture.git
 
