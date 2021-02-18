@@ -47,7 +47,18 @@ go build -mod vendor -o bin/emit cmd/emit/main.go
 
 ### count
 
-By default `go-whosonfirst-index-git` clones Git repositories in to memory:
+Count files in one or more whosonfirst/go-whosonfirst-index/v2/emitter sources.
+
+```
+> ./bin/count -h
+Count files in one or more whosonfirst/go-whosonfirst-index/v2/emitter sources.
+Usage:
+	 ./bin/count [options] uri(N) uri(N)
+Valid options are:
+
+  -emitter-uri string
+    	A valid whosonfirst/go-whosonfirst-index/v2/emitter URI. Supported emitter URI schemes are: directory://,featurecollection://,file://,filelist://,geojsonl://,git://,repo:// (default "repo://")
+```
 
 ```
 $> ./bin/count \
@@ -67,7 +78,7 @@ $> ./bin/count \
 2021/02/17 16:00:17 Counted 120 records (indexed 120 records)
 ```
 
-If your emitter URI contains a path then repositories will be cloned in that path:
+By default `go-whosonfirst-index-git` clones Git repositories in to memory. If your emitter URI contains a path then repositories will be cloned in that path:
 
 ```
 $> bin/count \
@@ -93,10 +104,31 @@ In this example the clone repository will be store in `/tmp/data/whosonfirst-dat
 
 ### emit
 
+Publish features from one or more whosonfirst/go-whosonfirst-index-git/v2 sources.
+
+```
+$> ./bin/emit -h
+Publish features from one or more whosonfirst/go-whosonfirst-index-git/v2 sources.
+Usage:
+	 ./bin/emit [options] uri(N) uri(N)
+Valid options are:
+
+  -emitter-uri string
+    	A valid whosonfirst/go-whosonfirst-index/v2/emitter URI. Supported emitter URI schemes are: directory://,featurecollection://,file://,filelist://,geojsonl://,git://,repo:// (default "git://")
+  -geojson
+    	Emit features as a well-formed GeoJSON FeatureCollection record.
+  -json
+    	Emit features as a well-formed JSON array.
+  -null
+    	Publish features to /dev/null
+  -stdout
+    	Publish features to STDOUT. (default true)
+```
+
 For example:
 
 ```
-> ./bin/emit \
+$> ./bin/emit \
 	-geojson \
 	-emitter-uri 'git://?include=properties.mz:is_current=1&include=properties.sfomuseum:placetype=gate' \
 	https://github.com/sfomuseum-data/sfomuseum-data-architecture.git \

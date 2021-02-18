@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/whosonfirst/go-whosonfirst-index/v2/emitter"
 	"github.com/whosonfirst/go-whosonfirst-index/v2/filters"
-	"github.com/whosonfirst/go-whosonfirst-index/v2/ioutil"		
+	"github.com/whosonfirst/go-whosonfirst-index/v2/ioutil"
 	gogit "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
@@ -20,11 +20,10 @@ func init() {
 
 type GitEmitter struct {
 	emitter.Emitter
-	target string
+	target   string
 	preserve bool
-	filters filters.Filters
+	filters  filters.Filters
 }
-
 
 func NewGitEmitter(ctx context.Context, uri string) (emitter.Emitter, error) {
 
@@ -33,7 +32,7 @@ func NewGitEmitter(ctx context.Context, uri string) (emitter.Emitter, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	em := &GitEmitter{
 		target: u.Path,
 	}
@@ -47,27 +46,27 @@ func NewGitEmitter(ctx context.Context, uri string) (emitter.Emitter, error) {
 	}
 
 	em.filters = f
-	
+
 	if q.Get("preserve") == "1" {
 		em.preserve = true
 	}
-	
+
 	return em, nil
 }
 
 func (em *GitEmitter) IndexURI(ctx context.Context, index_cb emitter.EmitterCallbackFunc, uri string) error {
 
 	var repo *gogit.Repository
-	
+
 	opts := &gogit.CloneOptions{
 		URL: uri,
 	}
 
 	switch em.target {
 	case "":
-	
+
 		r, err := gogit.Clone(memory.NewStorage(), nil, opts)
-		
+
 		if err != nil {
 			return err
 		}
@@ -77,7 +76,7 @@ func (em *GitEmitter) IndexURI(ctx context.Context, index_cb emitter.EmitterCall
 
 		fname := filepath.Base(uri)
 		path := filepath.Join(em.target, fname)
-		
+
 		r, err := gogit.PlainClone(path, false, opts)
 
 		if err != nil {
@@ -87,10 +86,10 @@ func (em *GitEmitter) IndexURI(ctx context.Context, index_cb emitter.EmitterCall
 		if !em.preserve {
 			defer os.RemoveAll(path)
 		}
-		
+
 		repo = r
 	}
-	
+
 	ref, err := repo.Head()
 
 	if err != nil {
@@ -131,7 +130,7 @@ func (em *GitEmitter) IndexURI(ctx context.Context, index_cb emitter.EmitterCall
 		if err != nil {
 			return err
 		}
-		
+
 		if em.filters != nil {
 
 			ok, err := em.filters.Apply(ctx, fh)
@@ -150,7 +149,7 @@ func (em *GitEmitter) IndexURI(ctx context.Context, index_cb emitter.EmitterCall
 				return err
 			}
 		}
-		
+
 		ctx := emitter.AssignPathContext(ctx, f.Name)
 		return index_cb(ctx, fh)
 	})
